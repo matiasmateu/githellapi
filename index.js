@@ -38,7 +38,7 @@ wsServer.on('request', function(request) {
     }
     
     var connection = request.accept('echo-protocol', request.origin);
-    console.log((new Date()) + ' Connection accepted !!!.');
+    console.log((new Date()) + ' Connection accepted!.');
     connection.on('message', function(message) {
         var data = JSON.parse(message.utf8Data)
         if (data.type==='Login'){
