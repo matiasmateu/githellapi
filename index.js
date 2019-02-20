@@ -69,17 +69,36 @@ wsServer.on('request', function (request) {
     console.log((new Date()) + ' Connection accepted!.');
     connection.on('message', function (message) {
         var data = JSON.parse(message.utf8Data)
+        console.log("Received from a client:")
         console.log(data)
         if (data.type === 'Login') {
+            console.log("Sending User Connected")
+            console.log(data.data)
             broadcast({type:"USER_CONNECTED",payload:data.data})
         }
         if (data.type === 'Logout') {
+            console.log("Sending User Disconnected")
+            console.log(data.data)
             broadcast({type:"USER_DISCONNECTED",payload:data.data})
         }
         if (data.type === 'NEW_GAME_REQUEST') {
+            console.log("Sending Game")
+            console.log(game)
             broadcast({type:"NEW_GAME",payload:game})
+            console.log("Sending Player1")
+            console.log(player1)
             broadcast({type:"UPDATE_PLAYER1",payload:player1})
+            console.log("Sending Player2")
+            console.log(player2)
             broadcast({type:"UPDATE_PLAYER2",payload:player2})
+        }
+
+        if (data.type === 'UPDATE_PLAYER1') {
+            player1.x = data.data.x
+            player1.y = data.data.y
+            console.log("Sending Player1")
+            console.log(player1)
+            broadcast({type:"UPDATE_PLAYER1",payload:player1})
         }
 
         /*
