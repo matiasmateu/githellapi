@@ -15,11 +15,15 @@ let game = {
 }
 
 let player1 = {
+    available:true,
+    client_id:0,
     x : 100,
     y : 50
 }
 
 let player2 = {
+    available:true,
+    client_id:0,
     x : 300,
     y : 50
 }
@@ -53,7 +57,18 @@ function broadcast(data){
     }
 }
 
-
+function assignPlayer(){
+        if (player1.available){
+            player1.id = 1
+            return player1
+        }else{
+            if (player2.available){
+                return player2
+            }else{
+                return null
+            }   
+        }
+}
 
 wsServer.on('request', function (request) {
     if (!originIsAllowed(request.origin)) {
@@ -66,39 +81,53 @@ wsServer.on('request', function (request) {
     var connection = request.accept('echo-protocol', request.origin);
     // we need to know client index to remove them on 'close' event
     var index = clients.push(connection) - 1;
-    console.log((new Date()) + ' Connection accepted!.');
+    console.log((new Date()) + ' Connection accepted!. ID:');
+  
     connection.on('message', function (message) {
         var data = JSON.parse(message.utf8Data)
+
+        // PRINT DATA RECEIVED FROM THE CLIENT FOR TESTING
+        /*
         console.log("Received from a client:")
         console.log(data)
+        */
+
+        // LOGIN LOGIC
         if (data.type === 'Login') {
-            console.log("Sending User Connected")
-            console.log(data.data)
-            broadcast({type:"USER_CONNECTED",payload:data.data})
-        }
-        if (data.type === 'Logout') {
-            console.log("Sending User Disconnected")
-            console.log(data.data)
-            broadcast({type:"USER_DISCONNECTED",payload:data.data})
-        }
-        if (data.type === 'NEW_GAME_REQUEST') {
-            console.log("Sending Game")
-            console.log(game)
-            broadcast({type:"NEW_GAME",payload:game})
-            console.log("Sending Player1")
-            console.log(player1)
-            broadcast({type:"UPDATE_PLAYER1",payload:player1})
-            console.log("Sending Player2")
-            console.log(player2)
-            broadcast({type:"UPDATE_PLAYER2",payload:player2})
+            console.log("Request received: USER LOGIN")    
+            reply = {type:"USER_CONNECTED",payload:data.data}     
+            console.log("Reply to the request:"+JSON.stringify(reply))
+            broadcast(reply)
         }
 
+        // LOGOUT LOGIC
+        if (data.type === 'Logout') {
+            console.log("Request received: USER LOGOUT")
+            reply = {type:"USER_DISCONNECTED",payload:data.data}
+            console.log("Reply to the request:"+JSON.stringify(reply))
+            broadcast(reply)
+        }
+
+        // NEW GAME LOGIC
+        if (data.type === 'NEW_GAME_REQUEST') {
+            console.log("Request received: NEW GAME")
+            reply1 = {type:"NEW_GAME",payload:game}
+            reply2 = {type:"UPDATE_PLAYER1",payload:player1}
+            reply3 = {type:"UPDATE_PLAYER2",payload:player2}
+            console.log("Reply to the request:"+JSON.stringify(reply1)+JSON.stringify(reply2)+JSON.stringify(reply3))
+            broadcast(reply1)
+            broadcast(reply2)
+            broadcast(reply3)
+        }
+
+        // UPDATE PLAYER 1
         if (data.type === 'UPDATE_PLAYER1') {
+            console.log('Request received: UPDATE PLAYER 1')
             player1.x = data.data.x
             player1.y = data.data.y
-            console.log("Sending Player1")
-            console.log(player1)
-            broadcast({type:"UPDATE_PLAYER1",payload:player1})
+            reply = {type:"UPDATE_PLAYER1",payload:player1}
+            console.log("Reply to the request:"+JSON.stringify(reply))
+            broadcast(reply)
         }
 
         /*
