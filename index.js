@@ -58,6 +58,9 @@ wsServer.on('request', function (request) {
         if (data.type === 'Logout') {
             broadcast({type:"USER_DISCONNECTED",payload:data.user})
         }
+        if (data.type === 'New Game') {
+            broadcast({type:"NEW_GAME",payload:data.game})
+        }
 
         /*
         else if (message.type === 'binary') {
