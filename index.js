@@ -9,19 +9,21 @@ var server = http.createServer(function (request, response) {
 
 // TEMPORAL DATA
 let game = {
-    isRunning :false,
-    gravity:0.3,
-    velocity:1
+    isRunning: false,
+    gravity: 0.3,
+    velocity: 1
 }
 
 let player1 = {
-    x : 100,
-    y : 50
+    id: 0,
+    x: 100,
+    y: 50
 }
 
 let player2 = {
-    x : 300,
-    y : 50
+    id: 0,
+    x: 300,
+    y: 50
 }
 
 server.listen(8080, function () {
@@ -39,21 +41,33 @@ wsServer = new WebSocketServer({
 })
 
 // list of currently connected clients (users)
-var clients = [ ];
+var clients = [];
 
 function originIsAllowed(origin) {
     // put logic here to detect whether the specified origin is allowed.
     return true;
 }
 
-function broadcast(data){
-    for (var i=0; i < clients.length; i++) {
+function broadcast(data) {
+    for (var i = 0; i < clients.length; i++) {
         clients[i].send(JSON.stringify(data))
-       
     }
 }
 
-
+// IMPLEMENT
+function assignPlayer() {
+    if (player1.id == 0) {
+        player1.id = "player1"
+        return player1
+    } else {
+        if (player2.id == 0) {
+            player2.id = "player2"
+            return player2
+        } else {
+            return null
+        }
+    }
+}
 
 wsServer.on('request', function (request) {
     if (!originIsAllowed(request.origin)) {
@@ -66,46 +80,94 @@ wsServer.on('request', function (request) {
     var connection = request.accept('echo-protocol', request.origin);
     // we need to know client index to remove them on 'close' event
     var index = clients.push(connection) - 1;
-    console.log((new Date()) + ' Connection accepted!.');
+    console.log((new Date()) + ' Connection accepted!');
+    console.log(clients.length)
+
     connection.on('message', function (message) {
         var data = JSON.parse(message.utf8Data)
-        console.log("Received from a client:")
-        console.log(data)
-        if (data.type === 'Login') {
-            console.log("Sending User Connected")
-            console.log(data.data)
-            broadcast({type:"USER_CONNECTED",payload:data.data})
-        }
-        if (data.type === 'Logout') {
-            console.log("Sending User Disconnected")
-            console.log(data.data)
-            broadcast({type:"USER_DISCONNECTED",payload:data.data})
-        }
-        if (data.type === 'NEW_GAME_REQUEST') {
-            console.log("Sending Game")
-            console.log(game)
-            broadcast({type:"NEW_GAME",payload:game})
-            console.log("Sending Player1")
-            console.log(player1)
-            broadcast({type:"UPDATE_PLAYER1",payload:player1})
-            console.log("Sending Player2")
-            console.log(player2)
-            broadcast({type:"UPDATE_PLAYER2",payload:player2})
-        }
-
-        if (data.type === 'UPDATE_PLAYER1') {
-            player1.x = data.data.x
-            player1.y = data.data.y
-            console.log("Sending Player1")
-            console.log(player1)
-            broadcast({type:"UPDATE_PLAYER1",payload:player1})
-        }
 
         /*
-        else if (message.type === 'binary') {
-            console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
-            connection.sendBytes(message.binaryData);
-        }*/
+        // PRINT DATA RECEIVED FROM THE CLIENT FOR TESTING
+        console.log("Received from a client:")
+        console.log(data)
+        */
+
+        // LOGIN LOGIC
+        if (data.type === 'Login') {
+            console.log("Request received: USER LOGIN")
+            reply = { type: "USER_CONNECTED", payload: assignPlayer() }
+            console.log("Reply to the request:" + JSON.stringify(reply))
+            broadcast(reply)
+        }
+
+        // LOGOUT LOGIC
+        if (data.type === 'Logout') {
+            console.log("Request received: USER LOGOUT")
+            reply = { type: "USER_DISCONNECTED", payload: assignPlayer() }
+            console.log("Reply to the request:" + JSON.stringify(reply))
+            broadcast(reply)
+        }
+
+        // NEW GAME LOGIC
+        if (data.type === 'NEW_GAME_REQUEST') {
+            console.log("Request received: NEW GAME")
+            game.isRunning = true;
+            reply1 = { type: "UPDATE_GAME", payload: game }
+            reply2 = { type: "UPDATE_PLAYER1", payload: player1 }
+            reply3 = { type: "UPDATE_PLAYER2", payload: player2 }
+            console.log("Reply to the request:" + JSON.stringify(reply1) + JSON.stringify(reply2) + JSON.stringify(reply3))
+            broadcast(reply1)
+            broadcast(reply2)
+            broadcast(reply3)
+        }
+
+        // GAME OVER LOGIC
+        if (data.type === "GAME_OVER_REQUEST") {
+            console.log("Request received: GAME_OVER")
+
+            // RESET STATS
+            game = { isRunning: false, gravity: 0.3, velocity: 1 }
+            reply1 = { type: "UPDATE_GAME", payload: game }
+            broadcast(reply1)
+
+            player1 = { id: 0, x: 100, y: 50 }
+            player2 = { id: 0, x: 300, y: 50 }
+
+            // PREPARE NEW DATA TO SEND
+            reply1 = { type: "UPDATE_GAME", payload: game }
+            p1 = { type: "USER_DISCONNECTED", payload: 'player1' }
+            p2 = { type: "USER_DISCONNECTED", payload: 'player2' }
+            reply2 = { type: "UPDATE_PLAYER1", payload: player1 }
+            reply3 = { type: "UPDATE_PLAYER2", payload: player2 }
+
+            console.log("Reply to the request: FULL RESET")
+            broadcast(p1)
+            broadcast(p2)
+            broadcast(reply2)
+            broadcast(reply3)
+        }
+
+        // UPDATE PLAYER
+        if (data.type === 'UPDATE_PLAYER') {
+            console.log('Request received: UPDATE PLAYER')
+            if (data.data.player === 'player1') {
+                player1.x = data.data.x
+                player1.y = data.data.y
+                reply = { type: "UPDATE_PLAYER1", payload: player1 }
+                console.log("Reply to the request:" + JSON.stringify(reply))
+                broadcast(reply)
+            } else {
+                
+                    player2.x = data.data.x
+                    player2.y = data.data.y
+                    reply = { type: "UPDATE_PLAYER2", payload: player2 }
+                    console.log("Reply to the request:" + JSON.stringify(reply))
+                    broadcast(reply)
+                
+
+            }
+
+        }
     });
     connection.on('close', function (reasonCode, description) {
         console.log(' Peer ' + connection.remoteAddress + ' disconnected.');
