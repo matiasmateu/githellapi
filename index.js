@@ -68,6 +68,18 @@ function assignPlayer() {
         }
     }
 }
+// CREATE PLATFORMS
+function createPlatforms(){
+    let platforms = []
+    let nrOfPlatforms = 7
+    let position = 10
+    for (var i = 0; i < nrOfPlatforms; i++) {
+      platforms[i] = new Platform(Math.random() * (500 - 70), position)
+      if (position < 800 - 20) position += ~~(800 / nrOfPlatforms)
+    }
+    return platforms
+}
+
 
 wsServer.on('request', function (request) {
     if (!originIsAllowed(request.origin)) {
@@ -115,10 +127,12 @@ wsServer.on('request', function (request) {
             reply1 = { type: "UPDATE_GAME", payload: game }
             reply2 = { type: "UPDATE_PLAYER1", payload: player1 }
             reply3 = { type: "UPDATE_PLAYER2", payload: player2 }
-            console.log("Reply to the request:" + JSON.stringify(reply1) + JSON.stringify(reply2) + JSON.stringify(reply3))
+            reply4 = {type:"UPDATE_PLATFORMS",payload:createPlatforms()}
+            console.log("Reply to the request:" + JSON.stringify(reply1) + JSON.stringify(reply2) + JSON.stringify(reply3)+ JSON.stringify(reply4))
             broadcast(reply1)
             broadcast(reply2)
             broadcast(reply3)
+            broadcast(reply4)
         }
 
         // GAME OVER LOGIC
@@ -139,12 +153,23 @@ wsServer.on('request', function (request) {
             p2 = { type: "USER_DISCONNECTED", payload: 'player2' }
             reply2 = { type: "UPDATE_PLAYER1", payload: player1 }
             reply3 = { type: "UPDATE_PLAYER2", payload: player2 }
+            
 
             console.log("Reply to the request: FULL RESET")
             broadcast(p1)
             broadcast(p2)
             broadcast(reply2)
             broadcast(reply3)
+            
+        }
+
+        // NEW PLATFORMS RECEIVED
+        if (data.type === 'NEW_PLATFORMS'){
+            console.log('Request received: UPDATE PLATFORMS')
+            platforms = data.data
+            reply = {type:"UPDATE_PLATFORMS",payload:this.createPlatforms()}
+            console.log('Reply to the request'+JSON.stringify(reply))
+            broadcast(reply)
         }
 
         // UPDATE PLAYER
@@ -173,3 +198,18 @@ wsServer.on('request', function (request) {
         console.log(' Peer ' + connection.remoteAddress + ' disconnected.');
     });
 });
+
+
+class Platform {
+    constructor(x, y) {
+        this.X = ~~x;
+        this.Y = y;
+        this.firstColor = '#FF8C00';
+        // this.secondColor = '#EEEE00';
+    }
+
+    draw(ctx) {
+        // ctx.fillStyle = this.firstColor;
+        ctx.fillRect(this.X,this.Y,100,20);
+    }
+}
