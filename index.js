@@ -3,8 +3,6 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 var server = http.createServer(function (request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
-    response.writeHead(404);
-    response.end();
 });
 
 // TEMPORAL DATA
@@ -234,7 +232,8 @@ wsServer.on('request', function (request) {
         console.log(' Peer ' + connection.remoteAddress + ' disconnected.');
     });
 });
-
+}
+}
 
 class Platform {
     constructor(x, y) {
