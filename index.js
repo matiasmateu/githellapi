@@ -55,18 +55,12 @@ function broadcast(data) {
 }
 
 // IMPLEMENT
-function assignPlayer() {
-    if (player1.id == 0) {
-        player1.id = "player1"
-        return player1
-    } else {
-        if (player2.id == 0) {
-            player2.id = "player2"
-            return player2
-        } else {
-            return null
-        }
-    }
+function assignPlayer(x) {
+ if (x%2===0){
+     return 'player1'
+    }else {
+         return 'player2'
+     }
 }
 // CREATE PLATFORMS
 function createPlatforms(){
@@ -98,7 +92,7 @@ wsServer.on('request', function (request) {
 
     var connection = request.accept('echo-protocol', request.origin);
     // we need to know client index to remove them on 'close' event
-    var index = clients.push(connection) - 1;
+    var index = clients.push(connection);
     console.log((new Date()) + ' Connection accepted!');
     console.log(clients.length)
 
@@ -113,10 +107,20 @@ wsServer.on('request', function (request) {
 
         // LOGIN LOGIC
         if (data.type === 'Login') {
-            console.log("Request received: USER LOGIN")
-            reply = { type: "USER_CONNECTED", payload: assignPlayer() }
+            console.log("Request received: USER LOGIN:"+data.data)
+    
+            reply = { type: "USER_CONNECTED",payload:data.data}
             console.log("Reply to the request:" + JSON.stringify(reply))
-            broadcast(reply)
+            connection.send(JSON.stringify(reply))
+            broadcast({type:"CONNECTIONS_UPDATE",payload:data.data})
+    
+            
+
+            /*
+            reply = { type: "USER_CONNECTED",payload:3}
+            console.log("Reply to the request:" + JSON.stringify(reply))
+            connection.send(reply)
+            */
         }
 
         // LOGOUT LOGIC
