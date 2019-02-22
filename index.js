@@ -4,7 +4,12 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 var server = http.createServer(function (request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
+    response.whiteHead(404)
+    response.end()
 });
+server.listen(8080,function(){
+    console.log(new Date() + 'Server Listening on port 8080')
+})
 
 // TEMPORAL DATA
 var clients = [];
