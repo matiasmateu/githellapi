@@ -246,6 +246,6 @@ class Flag {
 
     draw(ctx) {
         // ctx.fillStyle = this.firstColor;
-        ctx.fillRect(this.X,this.Y,500,500);
+        ctx.fillRect(this.X,this.Y,50,50);
     }
 }
