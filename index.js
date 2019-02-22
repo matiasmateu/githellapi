@@ -80,6 +80,13 @@ function createPlatforms(){
     return platforms
 }
 
+function serverLoop(){
+    reply2 = { type: "CONCILIATION_PLAYER1", payload: player1 }
+    reply3 = { type: "CONCILIATION_PLAYER2", payload: player2 }
+    broadcast(reply2)
+    broadcast(reply3)
+    setTimeout(serverLoop, 1000 / 60);
+}
 
 wsServer.on('request', function (request) {
     if (!originIsAllowed(request.origin)) {
@@ -133,6 +140,7 @@ wsServer.on('request', function (request) {
             broadcast(reply2)
             broadcast(reply3)
             broadcast(reply4)
+            serverLoop()
         }
 
         // GAME OVER LOGIC
@@ -175,6 +183,7 @@ wsServer.on('request', function (request) {
         // UPDATE PLAYER
         if (data.type === 'UPDATE_PLAYER') {
             console.log('Request received: UPDATE PLAYER')
+            console.log(data.data)
             if (data.data.player === 'player1') {
                 player1.x = data.data.x
                 player1.y = data.data.y
