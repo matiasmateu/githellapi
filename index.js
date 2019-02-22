@@ -84,7 +84,7 @@ function createPlatforms(){
 function createFlag(){
     let flag = []
     let nrOfFlags = 1
-    let position = 10
+    let position = 300
     for (var i = 0; i < nrOfFlags; i++) {
       flag[i] = new Flag(Math.random() * (1410 - 70), position)
       if (position < 680 - 20) position += ~~(680 / nrOfFlags)
