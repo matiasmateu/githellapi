@@ -10,7 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.18.3",
+    "json-parser": "^1.1.5",
     "nodemon": "^1.18.10",
-    "websocket": "^1.0.28"
+    "websocket": "^1.0.28",
+    "ws": "^6.1.4"
   }
 }
