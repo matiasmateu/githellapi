@@ -1,3 +1,4 @@
+
 var bodyParser = require('body-parser')
 var WebSocketServer = require('websocket').server;
 var http = require('http');
@@ -6,28 +7,23 @@ var server = http.createServer(function (request, response) {
 });
 
 // TEMPORAL DATA
+var clients = [];
+
 let game = {
     isRunning: false,
     gravity: 0.3,
     velocity: 1
 }
-
 let player1 = {
     id: 0,
     x: 100,
     y: 50
 }
-
 let player2 = {
     id: 0,
     x: 300,
     y: 50
 }
-
-server.listen(8080, function () {
-    console.log((new Date()) + ' Server is listening on port 8080');
-});
-
 wsServer = new WebSocketServer({
     httpServer: server,
     // You should not use autoAcceptConnections for production
@@ -37,28 +33,14 @@ wsServer = new WebSocketServer({
     // to accept it.
     autoAcceptConnections: false
 })
-
-// list of currently connected clients (users)
-var clients = [];
-
 function originIsAllowed(origin) {
     // put logic here to detect whether the specified origin is allowed.
     return true;
 }
-
 function broadcast(data) {
     for (var i = 0; i < clients.length; i++) {
         clients[i].send(JSON.stringify(data))
     }
-}
-
-// IMPLEMENT
-function assignPlayer(x) {
- if (x%2===0){
-     return 'player1'
-    }else {
-         return 'player2'
-     }
 }
 // CREATE PLATFORMS
 function createPlatforms(){
@@ -71,7 +53,6 @@ function createPlatforms(){
     }
     return platforms
 }
-
 function createFlag(){
     let flag = []
     let nrOfFlags = 1
@@ -81,14 +62,14 @@ function createFlag(){
       if (position < 680 - 20) position += ~~(680 / nrOfFlags)
     }
     return flag
-
+}
 function serverLoop(){
     reply2 = { type: "CONCILIATION_PLAYER1", payload: player1 }
     reply3 = { type: "CONCILIATION_PLAYER2", payload: player2 }
     broadcast(reply2)
     broadcast(reply3)
     setTimeout(serverLoop, 1000 / 60);
-
+}
 
 wsServer.on('request', function (request) {
     if (!originIsAllowed(request.origin)) {
@@ -106,31 +87,14 @@ wsServer.on('request', function (request) {
 
     connection.on('message', function (message) {
         var data = JSON.parse(message.utf8Data)
-
-        /*
-        // PRINT DATA RECEIVED FROM THE CLIENT FOR TESTING
-        console.log("Received from a client:")
-        console.log(data)
-        */
-
         // LOGIN LOGIC
         if (data.type === 'Login') {
             console.log("Request received: USER LOGIN:"+data.data)
-    
             reply = { type: "USER_CONNECTED",payload:data.data}
             console.log("Reply to the request:" + JSON.stringify(reply))
             connection.send(JSON.stringify(reply))
             broadcast({type:"CONNECTIONS_UPDATE",payload:data.data})
-    
-            
-
-            /*
-            reply = { type: "USER_CONNECTED",payload:3}
-            console.log("Reply to the request:" + JSON.stringify(reply))
-            connection.send(reply)
-            */
         }
-
         // LOGOUT LOGIC
         if (data.type === 'Logout') {
             console.log("Request received: USER LOGOUT")
@@ -138,7 +102,6 @@ wsServer.on('request', function (request) {
             console.log("Reply to the request:" + JSON.stringify(reply))
             broadcast(reply)
         }
-
         // NEW GAME LOGIC
         if (data.type === 'NEW_GAME_REQUEST') {
             console.log("Request received: NEW GAME")
@@ -154,9 +117,7 @@ wsServer.on('request', function (request) {
             broadcast(reply3)
             broadcast(reply4)
             broadcast(reply5)
-
             serverLoop()
-
         }
 
         // GAME OVER LOGIC
@@ -232,8 +193,6 @@ wsServer.on('request', function (request) {
         console.log(' Peer ' + connection.remoteAddress + ' disconnected.');
     });
 });
-}
-}
 
 class Platform {
     constructor(x, y) {
