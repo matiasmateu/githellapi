@@ -65,14 +65,24 @@ function assignPlayer(x) {
 // CREATE PLATFORMS
 function createPlatforms(){
     let platforms = []
-    let nrOfPlatforms = 7
+    let nrOfPlatforms = 15
     let position = 10
     for (var i = 0; i < nrOfPlatforms; i++) {
-      platforms[i] = new Platform(Math.random() * (500 - 70), position)
-      if (position < 800 - 20) position += ~~(800 / nrOfPlatforms)
+      platforms[i] = new Platform(Math.random() * (1410 - 70), position)
+      if (position < 680 - 20) position += ~~(680 / nrOfPlatforms)
     }
     return platforms
 }
+
+function createFlag(){
+    let flag = []
+    let nrOfFlags = 1
+    let position = 200
+    for (var i = 0; i < nrOfFlags; i++) {
+      flag[i] = new Flag(Math.random() * (1410 - 70), position)
+      if (position < 680 - 20) position += ~~(680 / nrOfFlags)
+    }
+    return flag
 
 function serverLoop(){
     reply2 = { type: "CONCILIATION_PLAYER1", payload: player1 }
@@ -80,7 +90,7 @@ function serverLoop(){
     broadcast(reply2)
     broadcast(reply3)
     setTimeout(serverLoop, 1000 / 60);
-}
+
 
 wsServer.on('request', function (request) {
     if (!originIsAllowed(request.origin)) {
@@ -139,12 +149,16 @@ wsServer.on('request', function (request) {
             reply2 = { type: "UPDATE_PLAYER1", payload: player1 }
             reply3 = { type: "UPDATE_PLAYER2", payload: player2 }
             reply4 = {type:"UPDATE_PLATFORMS",payload:createPlatforms()}
-            console.log("Reply to the request:" + JSON.stringify(reply1) + JSON.stringify(reply2) + JSON.stringify(reply3)+ JSON.stringify(reply4))
+            reply5 = {type:"UPDATE_FLAG",payload:createFlag()}
+            console.log("Reply to the request:" + JSON.stringify(reply1) + JSON.stringify(reply2) + JSON.stringify(reply3)+ JSON.stringify(reply4) + JSON.stringify(reply5))
             broadcast(reply1)
             broadcast(reply2)
             broadcast(reply3)
             broadcast(reply4)
+            broadcast(reply5)
+
             serverLoop()
+
         }
 
         // GAME OVER LOGIC
@@ -180,6 +194,15 @@ wsServer.on('request', function (request) {
             console.log('Request received: UPDATE PLATFORMS')
             platforms = data.data
             reply = {type:"UPDATE_PLATFORMS",payload:this.createPlatforms()}
+            console.log('Reply to the request'+JSON.stringify(reply))
+            broadcast(reply)
+        }
+
+        // NEW FLAG RECEIVED
+        if (data.type === 'NEW_FLAG'){
+            console.log('Request received: UPDATE FLAG')
+            flag = data.data
+            reply = {type:"UPDATE_FLAG",payload:this.createFlag()}
             console.log('Reply to the request'+JSON.stringify(reply))
             broadcast(reply)
         }
@@ -224,5 +247,19 @@ class Platform {
     draw(ctx) {
         // ctx.fillStyle = this.firstColor;
         ctx.fillRect(this.X,this.Y,100,20);
+    }
+}
+
+class Flag {
+    constructor(x, y) {
+        this.X = ~~x;
+        this.Y = y;
+        this.firstColor = '#FF8C00';
+        // this.secondColor = '#EEEE00';
+    }
+
+    draw(ctx) {
+        // ctx.fillStyle = this.firstColor;
+        ctx.fillRect(this.X,this.Y,50,50);
     }
 }
